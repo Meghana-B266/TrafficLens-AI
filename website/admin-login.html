@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>SnapNEarn - Admin Login</title>
+
+    <link rel="stylesheet"
+          href="styles.css">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body>
+
+    <div class="login-container">
+
+        <div class="login-header">
+
+            <div class="logo">
+
+                <i class="fas fa-shield-alt"></i>
+
+                <h1>SnapNEarn</h1>
+
+            </div>
+
+            <p class="tagline">
+                Admin Portal
+            </p>
+
+        </div>
+
+
+        <div class="login-form-container">
+
+            <h2 style="text-align: center; margin-bottom: 25px;">
+                <i class="fas fa-user-shield"></i>
+                Administrator Login
+            </h2>
+
+
+            <form id="adminLoginForm">
+
+                <div class="form-group">
+
+                    <i class="fas fa-envelope"></i>
+
+                    <input
+                        type="email"
+                        id="adminEmail"
+                        placeholder="Admin Email"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <i class="fas fa-lock"></i>
+
+                    <input
+                        type="password"
+                        id="adminPassword"
+                        placeholder="Password"
+                        required
+                    >
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="auth-btn">
+
+                    <i class="fas fa-sign-in-alt"></i>
+
+                    Admin Login
+
+                </button>
+
+            </form>
+
+
+            <div id="adminLoginMessage"
+                 style="margin-top: 15px;
+                        text-align: center;">
+            </div>
+
+
+            <div style="text-align: center;
+                        margin-top: 20px;">
+
+                <a href="index.html">
+                    ← Back to Citizen Login
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        const API_URL = 'https://snapnearn-backend-kishan.onrender.com/api';
+
+
+        document
+            .getElementById('adminLoginForm')
+            .addEventListener('submit', async function(event) {
+
+                event.preventDefault();
+
+
+                const email =
+                    document.getElementById('adminEmail').value;
+
+                const password =
+                    document.getElementById('adminPassword').value;
+
+
+                const message =
+                    document.getElementById('adminLoginMessage');
+
+
+                message.innerHTML =
+                    '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+
+
+                try {
+
+                    const response = await fetch(
+                        `${API_URL}/auth/login`,
+                        {
+                            method: 'POST',
+
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+
+                            body: JSON.stringify({
+                                identifier: email,
+                                password: password
+                            })
+                        }
+                    );
+
+
+                    const data = await response.json();
+
+
+                    if (!response.ok || !data.success) {
+
+                        throw new Error(
+                            data.message || 'Login failed'
+                        );
+
+                    }
+
+
+                    // IMPORTANT:
+                    // Only allow admin accounts
+                    if (data.user.role !== 'admin') {
+
+                        message.innerHTML =
+                            '<span style="color:red;">' +
+                            'Access denied. Admin account required.' +
+                            '</span>';
+
+                        return;
+
+                    }
+
+
+                    // Store admin authentication
+                    localStorage.setItem(
+                        'adminToken',
+                        data.token
+                    );
+
+
+                    localStorage.setItem(
+                        'adminUser',
+                        JSON.stringify(data.user)
+                    );
+
+
+                    message.innerHTML =
+                        '<span style="color:green;">' +
+                        'Admin login successful!' +
+                        '</span>';
+
+
+                    // Go to admin dashboard
+                    setTimeout(function() {
+
+                       window.location.href = '/admin.html';
+
+                    }, 700);
+
+
+                } catch (error) {
+
+                    console.error(
+                        'Admin login error:',
+                        error
+                    );
+
+
+                    message.innerHTML =
+                        '<span style="color:red;">' +
+                        error.message +
+                        '</span>';
+
+                }
+
+            });
+
+    </script>
+
+</body>
+
+</html>
+

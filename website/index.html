@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapNEarn - Smart Traffic Violation Detection</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBvOkBwgGlbUiuS-oKrPGmHaEWBuMVyOfM&libraries=places"></script>
+
+    <!-- TensorFlow.js & BlazeFace for Face Blur -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+
+    <!-- Tesseract.js for OCR (Number Plate Recognition) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+</head>
+
+<body>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="page active">
+
+        <div class="login-container">
+
+            <div class="login-header">
+
+                <div class="police-image">
+                    <img src="police.jpg" alt="Police Officer" class="police-img">
+                </div>
+
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <h1>SnapNEarn</h1>
+                </div>
+
+                <p class="tagline">Smart Traffic Violation Detection System</p>
+
+            </div>
+
+            <div class="login-form-container">
+
+                <div class="form-tabs">
+                    <button class="tab-btn active" onclick="showLoginForm()">Login</button>
+                    <button class="tab-btn" onclick="showRegisterForm()">Register</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form active">
+
+                    <div class="form-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="loginEmail" placeholder="Email Address" required>
+                    </div>
+
+                    <div class="form-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" placeholder="Password" required>
+
+                        <button type="button"
+                                class="toggle-password"
+                                onclick="togglePassword('loginPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <div class="form-options">
+
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="rememberMe">
+                            <span class="checkmark"></span>
+                            Remember me
+                        </label>
+
+                        <a href="#" class="forgot-password">Forgot Password?</a>
+
+                    </div>
+
+                    <button type="submit" class="auth-btn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Login
+                    </button>
+
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" class="auth-form">
+
+                    <div class="form-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text"
+                               id="registerName"
+                               placeholder="Full Name"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email"
+                               id="registerEmail"
+                               placeholder="Email Address"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel"
+                               id="registerPhone"
+                               placeholder="Phone Number"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password"
+                               id="registerPassword"
+                               placeholder="Password"
+                               required>
+
+                        <button type="button"
+                                class="toggle-password"
+                                onclick="togglePassword('registerPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password"
+                               id="confirmPassword"
+                               placeholder="Confirm Password"
+                               required>
+                    </div>
+
+                    <div class="form-options">
+
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="agreeTerms" required>
+                            <span class="checkmark"></span>
+                            I agree to the <a href="#">Terms & Conditions</a>
+                        </label>
+
+                    </div>
+
+                    <button type="submit" class="auth-btn">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </button>
+
+                </form>
+
+            </div>
+
+            <div class="login-footer">
+
+                <div class="features">
+
+                    <div class="feature">
+                        <i class="fas fa-camera"></i>
+                        <span>AI Detection</span>
+                    </div>
+
+                    <div class="feature">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>GPS Tracking</span>
+                    </div>
+
+                    <div class="feature">
+                        <i class="fas fa-coins"></i>
+                        <span>Earn Rewards</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Main Dashboard -->
+    <div id="dashboardPage" class="page">
+
+        <nav class="navbar">
+
+            <div class="nav-brand">
+                <i class="fas fa-shield-alt"></i>
+                <span>SnapNEarn</span>
+            </div>
+
+            <div class="nav-user">
+
+                <span id="userName">Welcome, User!</span>
+
+                <button class="reward-btn"
+                        onclick="openRewardsModal()"
+                        title="View Rewards">
+
+                    <i class="fas fa-coins"></i>
+
+                    <span class="reward-amount"
+                          id="navRewardAmount">₹0</span>
+
+                </button>
+
+                <button class="alert-btn"
+                        onclick="triggerEmergencyAlert()"
+                        title="Emergency Alert">
+
+                    <i class="fas fa-exclamation-triangle"></i>
+
+                </button>
+
+                <button class="logout-btn"
+                        onclick="logout()"
+                        title="Logout">
+
+                    <i class="fas fa-sign-out-alt"></i>
+
+                </button>
+
+            </div>
+
+        </nav>
+
+
+        <div class="dashboard-container">
+
+            <!-- GPS Status -->
+            <div class="status-card">
+
+                <div class="status-header">
+                    <i class="fas fa-satellite-dish"></i>
+                    <h3>GPS Status</h3>
+                </div>
+
+                <div id="gpsStatus" class="status-content">
+
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Connecting to GPS...</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Police Station Info -->
+            <div class="status-card">
+
+                <div class="status-header">
+                    <i class="fas fa-building"></i>
+                    <h3>Nearest Police Station</h3>
+                </div>
+
+                <div id="policeStationInfo" class="status-content">
+
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Finding nearest station...</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Upload Section -->
+            <div class="upload-section">
+
+                <h2>Capture Evidence</h2>
+
+                <div class="upload-options">
+
+                    <!-- NEW: Upload Photo -->
+                    <div class="upload-card"
+                         onclick="openUploadModal('photo')">
+
+                        <i class="fas fa-camera"></i>
+
+                        <h3>Upload Photo</h3>
+
+                        <p>
+                            Upload a traffic violation photo
+                            for AI analysis
+                        </p>
+
+                    </div>
+
+
+                    <!-- Existing: Capture Video -->
+                    <div class="upload-card"
+                         onclick="openCaptureVideoModal()">
+
+                        <i class="fas fa-video"></i>
+
+                        <h3>Capture Video</h3>
+
+                        <p>
+                            Record 20-second video with face blur
+                            & auto-extract frames
+                        </p>
+
+                    </div>
+
+
+                    <!-- Existing: Upload Video -->
+                    <div class="upload-card"
+                         onclick="openUploadVideoModal()">
+
+                        <i class="fas fa-upload"></i>
+
+                        <h3>Upload Video</h3>
+
+                        <p>
+                            Upload existing video
+                            & auto-extract frames for analysis
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Recent Reports -->
+            <div class="reports-section">
+
+                <h2>Recent Reports</h2>
+
+                <div id="recentReports" class="reports-list">
+
+                    <div class="no-reports">
+
+                        <i class="fas fa-clipboard-list"></i>
+
+                        <p>
+                            No reports yet.
+                            Start by uploading evidence!
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="modal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2 id="modalTitle">Upload Evidence</h2>
+
+                <button class="close-btn"
+                        onclick="closeUploadModal()">
+
+                    <i class="fas fa-times"></i>
+
+                </button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <div class="upload-zone"
+                     id="uploadZone">
+
+                    <i class="fas fa-cloud-upload-alt"></i>
+
+                    <h3>
+                        Drag & Drop or Click to Upload
+                    </h3>
+
+                    <p>
+                        Supports JPG, PNG, MP4, MOV files
+                    </p>
+
+                    <input type="file"
+                           id="fileInput"
+                           accept="image/*,video/*"
+                           multiple>
+
+                </div>
+
+
+                <div id="uploadPreview"
+                     class="upload-preview">
+                </div>
+
+
+                <div id="analysisResults"
+                     class="analysis-results">
+                </div>
+
+
+                <div class="modal-actions">
+
+                    <button class="btn-secondary"
+                            onclick="closeUploadModal()">
+
+                        Cancel
+
+                    </button>
+
+                    <button id="processBtn"
+                            class="btn-primary"
+                            onclick="processUpload()"
+                            disabled>
+
+                        <i class="fas fa-cog fa-spin"
+                           style="display: none;">
+                        </i>
+
+                        Process Evidence
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Video Capture Modal with Face Blur -->
+    <div id="videoCaptureModal" class="modal">
+
+        <div class="modal-content"
+             style="max-width: 800px;">
+
+            <div class="modal-header">
+
+                <h2>🔒 Capture Video with Face Blur</h2>
+
+                <button class="close-btn"
+                        onclick="closeVideoCaptureModal()">
+
+                    <i class="fas fa-times"></i>
+
+                </button>
+
+            </div>
+
+            <div class="modal-body"
+                 style="text-align: center;">
+
+                <div id="captureStatus"
+                     style="font-weight: 600;
+                            color: orange;
+                            margin-bottom: 14px;">
+
+                    Loading face blur model...
+
+                </div>
+
+
+                <div id="videoContainer"
+                     style="position: relative;
+                            display: inline-block;
+                            border-radius: 12px;
+                            overflow: hidden;
+                            background: #000;">
+
+                    <video id="captureVideo"
+                           autoplay
+                           muted
+                           playsinline
+                           style="display: block;
+                                  width: 640px;
+                                  height: 480px;
+                                  max-width: 100%;
+                                  background: #000;">
+                    </video>
+
+                    <canvas id="blurOverlay"
+                            style="position: absolute;
+                                   top: 0;
+                                   left: 0;
+                                   pointer-events: none;">
+                    </canvas>
+
+                </div>
+
+
+                <div style="margin-top: 20px;">
+
+                    <button id="startCaptureBtn"
+                            class="btn-primary"
+                            style="margin: 10px;">
+
+                        <i class="fas fa-play"></i>
+                        Start Secure Video
+
+                    </button>
+
+
+                    <button id="stopCaptureBtn"
+                            class="btn-secondary"
+                            style="margin: 10px;
+                                   display: none;">
+
+                        <i class="fas fa-stop"></i>
+                        Stop Recording
+
+                    </button>
+
+
+                    <button id="saveCaptureBtn"
+                            class="btn-primary"
+                            style="margin: 10px;
+                                   display: none;">
+
+                        <i class="fas fa-save"></i>
+                        Save & Process
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+
+        <div class="modal-content success-modal"
+             style="max-width: 650px;">
+
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+
+            <h2>Challan Generated Successfully!</h2>
+
+
+            <!-- Violation Image -->
+            <div style="margin: 20px 0;
+                        text-align: center;">
+
+                <img id="violationImage"
+                     src=""
+                     alt="Violation Evidence"
+                     style="max-width: 100%;
+                            max-height: 300px;
+                            border-radius: 12px;
+                            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                            display: none;">
+
+            </div>
+
+
+            <div class="success-details">
+
+                <div style="display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 15px;
+                            margin-bottom: 15px;">
+
+                    <div style="background: #f8f9fa;
+                                padding: 12px;
+                                border-radius: 8px;
+                                border-left: 4px solid #667eea;">
+
+                        <p style="margin: 0;
+                                  color: #666;
+                                  font-size: 0.85rem;">
+
+                            Timestamp
+
+                        </p>
+
+                        <p style="margin: 5px 0 0 0;
+                                  font-weight: 600;
+                                  color: #333;"
+                           id="violationTimestamp">
+                        </p>
+
+                    </div>
+
+
+                    <div style="background: #f8f9fa;
+                                padding: 12px;
+                                border-radius: 8px;
+                                border-left: 4px solid #28a745;">
+
+                        <p style="margin: 0;
+                                  color: #666;
+                                  font-size: 0.85rem;">
+
+                            AI Score
+
+                        </p>
+
+                        <p style="margin: 5px 0 0 0;
+                                  font-weight: 600;
+                                  color: #28a745;"
+                           id="aiScore">
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <p>
+                    <strong>Violation Detected:</strong>
+                    <span id="violationType"
+                          style="color: #dc3545;">
+                    </span>
+                </p>
+
+                <p>
+                    <strong>Vehicle Number:</strong>
+                    <span id="vehicleNumber"
+                          style="font-family: monospace;
+                                 font-size: 1.1em;
+                                 color: #667eea;">
+                    </span>
+                </p>
+
+                <p>
+                    <strong>Fine Amount:</strong>
+                    <span id="fineAmount"
+                          style="color: #dc3545;">
+                    </span>
+                </p>
+
+                <p>
+                    <strong>Your Reward:</strong>
+                    <span id="rewardAmount"
+                          style="color: #28a745;">
+                    </span>
+                </p>
+
+            </div>
+
+
+            <!-- Verification Stats -->
+            <div style="background: #e8f5e8;
+                        padding: 15px;
+                        border-radius: 10px;
+                        margin: 15px 0;
+                        border-left: 4px solid #28a745;">
+
+                <h4 style="margin: 0 0 10px 0;
+                           color: #155724;
+                           display: flex;
+                           align-items: center;
+                           gap: 8px;">
+
+                    <i class="fas fa-check-double"></i>
+                    Verification Statistics
+
+                </h4>
+
+
+                <div style="display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 10px;
+                            font-size: 0.9rem;">
+
+                    <p style="margin: 5px 0;">
+                        <strong>Total Frames:</strong>
+                        <span id="totalFrames">0</span>
+                    </p>
+
+                    <p style="margin: 5px 0;">
+                        <strong>AI Analyzed:</strong>
+                        <span id="framesAnalyzed">3</span>
+                    </p>
+
+                    <p style="margin: 5px 0;">
+                        <strong>Selected Frame:</strong>
+                        <span id="selectedFrame">#1</span>
+                    </p>
+
+                    <p style="margin: 5px 0;">
+                        <strong>Status:</strong>
+                        <span id="verificationStatus"
+                              style="color: #28a745;
+                                     font-weight: 600;">
+                            ✓ Verified
+                        </span>
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="success-message">
+
+                <i class="fas fa-gift"></i>
+
+                <p>
+                    Congratulations! Your reward will be credited
+                    to your account within 24 hours.
+                </p>
+
+            </div>
+
+
+            <button class="btn-primary"
+                    onclick="closeSuccessModal()">
+
+                Continue
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- Rewards Modal -->
+    <div id="rewardsModal" class="modal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2>
+                    <i class="fas fa-coins"></i>
+                    My Rewards
+                </h2>
+
+                <button class="close-btn"
+                        onclick="closeRewardsModal()">
+
+                    <i class="fas fa-times"></i>
+
+                </button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <div class="petrol-tank-section">
+
+                    <h3>
+                        <i class="fas fa-gas-pump"></i>
+                        Petrol Reward Tank
+                    </h3>
+
+
+                    <div class="petrol-tank-container">
+
+                        <div class="petrol-tank">
+
+                            <div class="petrol-fill"
+                                 style="height: 0%;">
+                            </div>
+
+                            <div class="tank-markers">
+
+                                <div class="marker"
+                                     style="bottom: 80%;">
+                                    5
+                                </div>
+
+                                <div class="marker"
+                                     style="bottom: 60%;">
+                                    4
+                                </div>
+
+                                <div class="marker"
+                                     style="bottom: 40%;">
+                                    3
+                                </div>
+
+                                <div class="marker"
+                                     style="bottom: 20%;">
+                                    2
+                                </div>
+
+                                <div class="marker"
+                                     style="bottom: 0%;">
+                                    1
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="tank-info">
+
+                            <p>
+                                <strong>Current Level:</strong>
+                                <span id="totalEarnings">
+                                    0/5
+                                </span>
+                                Rewards
+                            </p>
+
+                            <p>
+                                <strong>Need:</strong>
+                                <span id="pendingRewards">
+                                    5 more
+                                </span>
+                                to redeem
+                            </p>
+
+                            <p>
+                                <strong>Redeem Value:</strong>
+                                2 Liters Petrol (₹200)
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="rewards-summary">
+
+                    <div class="reward-card total-reports">
+
+                        <div class="reward-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+
+                        <div class="reward-info">
+
+                            <h3 id="totalReports">0</h3>
+                            <p>Total Reports</p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="reward-card petrol-redeemed">
+
+                        <div class="reward-icon">
+                            <i class="fas fa-gas-pump"></i>
+                        </div>
+
+                        <div class="reward-info">
+
+                            <h3 id="petrolRedeemed">0L</h3>
+                            <p>Petrol Redeemed</p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="reward-card next-reward">
+
+                        <div class="reward-icon">
+                            <i class="fas fa-target"></i>
+                        </div>
+
+                        <div class="reward-info">
+
+                            <h3 id="nextReward">5</h3>
+                            <p>Next Milestone</p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="rewards-history">
+
+                    <h3>
+                        <i class="fas fa-history"></i>
+                        Reward History
+                    </h3>
+
+                    <div id="rewardsList"
+                         class="rewards-list">
+
+                        <div class="no-rewards">
+
+                            <i class="fas fa-coins"></i>
+
+                            <p>
+                                No rewards yet.
+                                Start reporting violations
+                                to earn rewards!
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="withdrawal-section">
+
+                    <h3>
+                        <i class="fas fa-gas-pump"></i>
+                        Redeem Petrol
+                    </h3>
+
+                    <div class="withdrawal-info">
+
+                        <p>
+                            <strong>Redemption:</strong>
+                            5 Rewards = 2 Liters Petrol
+                        </p>
+
+                        <p>
+                            <strong>Value:</strong>
+                            ₹200 worth of petrol
+                        </p>
+
+                        <p>
+                            <strong>Processing:</strong>
+                            Instant credit to your account
+                        </p>
+
+                    </div>
+
+
+                    <button id="withdrawBtn"
+                            class="btn-primary"
+                            onclick="initiateWithdrawal()"
+                            disabled>
+
+                        <i class="fas fa-gas-pump"></i>
+
+                        Need 5 more rewards
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Emergency Alert Modal -->
+    <div id="alertModal" class="modal">
+
+        <div class="modal-content alert-modal">
+
+            <div class="alert-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+
+            <h2>Emergency Alert Activated!</h2>
+
+
+            <div class="alert-status">
+
+                <div class="alert-step active">
+                    <i class="fas fa-satellite-dish"></i>
+                    <span>Location Sent to Police</span>
+                </div>
+
+                <div class="alert-step active">
+                    <i class="fas fa-phone"></i>
+                    <span>Emergency Call Initiated</span>
+                </div>
+
+                <div class="alert-step active">
+                    <i class="fas fa-car"></i>
+                    <span>Police Dispatch: ETA 3-5  mins</span>
+                </div>
+
+            </div>
+
+
+            <div class="alert-details">
+
+                <p>
+                    <strong>Alert ID:</strong>
+                    <span id="alertId"></span>
+                </p>
+
+                <p>
+                    <strong>Location:</strong>
+                    <span id="alertLocation"></span>
+                </p>
+
+                <p>
+                    <strong>Time:</strong>
+                    <span id="alertTime"></span>
+                </p>
+
+                <p>
+                    <strong>Status:</strong>
+                    <span style="color: #dc3545;
+                                 font-weight: 600;">
+                        ACTIVE
+                    </span>
+                </p>
+
+            </div>
+
+
+            <div class="alert-message">
+
+                <i class="fas fa-shield-alt"></i>
+
+                <p>
+                    Stay calm! Police are on their way.
+                    Keep this alert active until help arrives.
+                </p>
+
+            </div>
+
+
+            <div class="alert-actions">
+
+                <button class="btn-secondary"
+                        onclick="cancelAlert()">
+
+                    Cancel Alert
+
+                </button>
+
+                <button class="btn-danger"
+                        onclick="escalateAlert()">
+
+                    <i class="fas fa-siren-on"></i>
+                    Escalate Emergency
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>
+

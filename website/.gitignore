@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+
+# Environment variables
+.env
+backend/.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+
+# Uploaded/generated files
+uploads/
+backend/uploads/
+
+# Python generated files
+*.jpg
+*.jpeg
+*.png

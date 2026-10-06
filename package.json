@@ -1,0 +1,32 @@
+{
+  "name": "cache-us-if-you-can",
+  "version": "1.0.0",
+  "description": "AI-Powered Road Safety & Traffic Violation Detection Application",
+  "main": "index.js",
+  "scripts": {
+    "dev": "cd backend && npm run dev",
+    "backend:dev": "cd backend && npm run dev",
+    "backend:install": "cd backend && npm install",
+    "install:all": "cd backend && npm install",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "artificial-intelligence",
+    "computer-vision",
+    "road-safety",
+    "traffic-violations",
+    "helmetta-detection",
+    "ocr"
+  ],
+  "author": "CACHE Development Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "workspaces": [
+    "backend"
+  ],
+  "dependencies": {
+    "mongodb": "^7.5.0"
+  }
+}
